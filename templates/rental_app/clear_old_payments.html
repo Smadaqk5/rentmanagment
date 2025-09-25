@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Clear Old Payments{% endblock %}
+
+{% block content %}
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-calendar-times"></i> Clear Old Payments
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Info:</strong> This will delete all payments older than the specified number of days. This is useful for cleaning up old payment records.
+                    </div>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="days" class="form-label">Delete payments older than (days)</label>
+                            <select class="form-select" id="days" name="days" required>
+                                <option value="30">30 days (1 month)</option>
+                                <option value="90">90 days (3 months)</option>
+                                <option value="180">180 days (6 months)</option>
+                                <option value="365" selected>365 days (1 year)</option>
+                                <option value="730">730 days (2 years)</option>
+                                <option value="1095">1095 days (3 years)</option>
+                            </select>
+                            <div class="form-text">
+                                Select how old payments should be before they are deleted.
+                            </div>
+                        </div>
+
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <strong>Warning:</strong> This action cannot be undone. Make sure you have exported your data if you need to keep a backup.
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'record_management' %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete old payments? This action cannot be undone.')">
+                                <i class="fas fa-trash"></i> Delete Old Payments
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Help Section -->
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-question-circle"></i> Help</h6>
+                </div>
+                <div class="card-body">
+                    <h6>What happens when you clear old payments?</h6>
+                    <ul>
+                        <li>All payment records older than the selected number of days will be permanently deleted</li>
+                        <li>Tenant records will remain intact</li>
+                        <li>Current tenant payment statuses will not be affected</li>
+                        <li>This helps keep your database clean and improves performance</li>
+                    </ul>
+                    
+                    <h6>Before clearing old payments:</h6>
+                    <ul>
+                        <li>Consider exporting your data first using the "Export Data" feature</li>
+                        <li>Make sure you have backups of important payment records</li>
+                        <li>Choose an appropriate time period based on your business needs</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

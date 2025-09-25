@@ -1,0 +1,164 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Bulk Delete Payments{% endblock %}
+
+{% block content %}
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">
+                        <i class="fas fa-credit-card"></i> Bulk Delete Payments
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>Warning:</strong> This action will permanently delete the selected payments. The tenant's amount due will be updated accordingly. This action cannot be undone.
+                    </div>
+
+                    <form method="post" id="bulkDeleteForm">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="selectAll">
+                                <label class="form-check-label" for="selectAll">
+                                    <strong>Select All Payments</strong>
+                                </label>
+                            </div>
+                        </div>
+
+                        {% if payments %}
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Select</th>
+                                            <th>Date</th>
+                                            <th>Tenant</th>
+                                            <th>Amount</th>
+                                            <th>Type</th>
+                                            <th>Status</th>
+                                            <th>Notes</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for payment in payments %}
+                                            <tr>
+                                                <td>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input payment-checkbox" 
+                                                               type="checkbox" 
+                                                               name="payment_ids" 
+                                                               value="{{ payment.id }}"
+                                                               id="payment_{{ payment.id }}">
+                                                    </div>
+                                                </td>
+                                                <td>{{ payment.date|date:"M d, Y H:i" }}</td>
+                                                <td>
+                                                    <strong>{{ payment.tenant.name }}</strong>
+                                                    <br>
+                                                    <small class="text-muted">{{ payment.tenant.apartment_number }}</small>
+                                                </td>
+                                                <td>KSh {{ payment.amount }}</td>
+                                                <td>
+                                                    <span class="badge bg-{% if payment.payment_type == 'Full' %}success{% elif payment.payment_type == 'Partial' %}warning{% else %}info{% endif %}">
+                                                        {{ payment.payment_type }}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    {% if payment.status == 'Paid' %}
+                                                        <span class="badge bg-success">Paid</span>
+                                                    {% else %}
+                                                        <span class="badge bg-warning">Pending</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    <small class="text-muted">{{ payment.notes|truncatechars:30 }}</small>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="d-flex justify-content-between">
+                                <a href="{% url 'record_management' %}" class="btn btn-secondary">
+                                    <i class="fas fa-arrow-left"></i> Cancel
+                                </a>
+                                <button type="submit" class="btn btn-warning" id="deleteButton" disabled>
+                                    <i class="fas fa-trash"></i> Delete Selected Payments
+                                </button>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4">
+                                <i class="fas fa-credit-card fa-3x text-muted mb-3"></i>
+                                <h5 class="text-muted">No payments found</h5>
+                                <p class="text-muted">There are no payments to delete.</p>
+                                <a href="{% url 'record_management' %}" class="btn btn-primary">
+                                    <i class="fas fa-arrow-left"></i> Back to Record Management
+                                </a>
+                            </div>
+                        {% endif %}
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Select all functionality
+        document.getElementById('selectAll').addEventListener('change', function() {
+            const checkboxes = document.querySelectorAll('.payment-checkbox');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = this.checked;
+            });
+            updateDeleteButton();
+        });
+
+        // Individual checkbox change
+        document.querySelectorAll('.payment-checkbox').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                updateDeleteButton();
+                updateSelectAll();
+            });
+        });
+
+        function updateDeleteButton() {
+            const checkedBoxes = document.querySelectorAll('.payment-checkbox:checked');
+            const deleteButton = document.getElementById('deleteButton');
+            deleteButton.disabled = checkedBoxes.length === 0;
+            deleteButton.textContent = `Delete ${checkedBoxes.length} Selected Payment${checkedBoxes.length !== 1 ? 's' : ''}`;
+        }
+
+        function updateSelectAll() {
+            const checkboxes = document.querySelectorAll('.payment-checkbox');
+            const selectAll = document.getElementById('selectAll');
+            const checkedCount = document.querySelectorAll('.payment-checkbox:checked').length;
+            
+            if (checkedCount === 0) {
+                selectAll.indeterminate = false;
+                selectAll.checked = false;
+            } else if (checkedCount === checkboxes.length) {
+                selectAll.indeterminate = false;
+                selectAll.checked = true;
+            } else {
+                selectAll.indeterminate = true;
+            }
+        }
+
+        // Confirmation before delete
+        document.getElementById('bulkDeleteForm').addEventListener('submit', function(e) {
+            const checkedBoxes = document.querySelectorAll('.payment-checkbox:checked');
+            if (checkedBoxes.length === 0) {
+                e.preventDefault();
+                alert('Please select at least one payment to delete.');
+                return;
+            }
+            
+            if (!confirm(`Are you sure you want to delete ${checkedBoxes.length} payment(s)? This action cannot be undone.`)) {
+                e.preventDefault();
+            }
+        });
+    </script>
+{% endblock %}

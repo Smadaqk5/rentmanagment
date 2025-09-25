@@ -1,0 +1,255 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Dashboard{% endblock %}
+
+{% block page_actions %}
+    <div class="btn-group" role="group">
+        <a href="{% url 'add_tenant' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Add Tenant
+        </a>
+        <a href="{% url 'add_payment' %}" class="btn btn-success">
+            <i class="fas fa-credit-card"></i> Record Payment
+        </a>
+    </div>
+{% endblock %}
+
+{% block content %}
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-2">
+            <div class="card card-stat">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title text-muted">Total Tenants</h6>
+                            <h3 class="mb-0">{{ analytics.total_tenants }}</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-users fa-2x text-primary"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card card-stat paid">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title text-muted">Paid</h6>
+                            <h3 class="mb-0 text-success">{{ analytics.paid_tenants }}</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-check-circle fa-2x text-success"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card card-stat unpaid">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title text-muted">Unpaid</h6>
+                            <h3 class="mb-0 text-danger">{{ analytics.unpaid_tenants }}</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-exclamation-triangle fa-2x text-danger"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card card-stat">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title text-muted">Partial</h6>
+                            <h3 class="mb-0 text-warning">{{ analytics.partial_tenants }}</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-clock fa-2x text-warning"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card card-stat unpaid">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title text-muted">Overdue</h6>
+                            <h3 class="mb-0 text-danger">{{ analytics.overdue_tenants }}</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-exclamation-circle fa-2x text-danger"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card card-stat">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title text-muted">Collection Rate</h6>
+                            <h3 class="mb-0">{{ analytics.collection_rate|floatformat:1 }}%</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-percentage fa-2x text-info"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Income Overview -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="card-title text-muted">Monthly Income</h6>
+                    <h3 class="mb-0 text-success">KSh {{ monthly_income.total_income|floatformat:0 }}</h3>
+                    <small class="text-muted">{{ monthly_income.month_name }} {{ monthly_income.year }}</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="card-title text-muted">Total Rent Due</h6>
+                    <h3 class="mb-0 text-primary">KSh {{ analytics.total_rent_due|floatformat:0 }}</h3>
+                    <small class="text-muted">All tenants combined</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="card-title text-muted">Amount Outstanding</h6>
+                    <h3 class="mb-0 text-warning">KSh {{ analytics.total_amount_due|floatformat:0 }}</h3>
+                    <small class="text-muted">Still owed by tenants</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Tenants Table -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-users"></i> Tenants Overview</h5>
+                    <a href="{% url 'tenant_list' %}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body">
+                    {% if tenants %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Apartment</th>
+                                        <th>Rent Amount</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for tenant in tenants %}
+                                        <tr>
+                                            <td>
+                                                <strong>{{ tenant.name }}</strong>
+                                                <br>
+                                                <small class="text-muted">{{ tenant.phone }}</small>
+                                            </td>
+                                            <td>{{ tenant.apartment_number }}</td>
+                                            <td>KSh {{ tenant.rent_amount }}</td>
+                                            <td>
+                                                {% if tenant.rent_status == 'Paid' %}
+                                                    <span class="badge bg-success">Paid</span>
+                                                {% else %}
+                                                    <span class="badge bg-danger">Unpaid</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm" role="group">
+                                                    {% if tenant.rent_status == 'Unpaid' %}
+                                                        <a href="{% url 'mark_rent_paid' tenant.id %}" 
+                                                           class="btn btn-success btn-sm" 
+                                                           title="Mark as Paid">
+                                                            <i class="fas fa-check"></i>
+                                                        </a>
+                                                        <a href="{% url 'send_reminder' tenant.id %}" 
+                                                           class="btn btn-info btn-sm" 
+                                                           title="Send SMS Reminder">
+                                                            <i class="fas fa-sms"></i>
+                                                        </a>
+                                                    {% endif %}
+                                                    <a href="{% url 'edit_tenant' tenant.id %}" 
+                                                       class="btn btn-primary btn-sm" 
+                                                       title="Edit">
+                                                        <i class="fas fa-edit"></i>
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No tenants found</h5>
+                            <p class="text-muted">Add your first tenant to get started.</p>
+                            <a href="{% url 'add_tenant' %}" class="btn btn-primary">
+                                <i class="fas fa-plus"></i> Add Tenant
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Payments -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-credit-card"></i> Recent Payments</h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_payments %}
+                        {% for payment in recent_payments %}
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div>
+                                    <h6 class="mb-0">{{ payment.tenant.name }}</h6>
+                                    <small class="text-muted">{{ payment.tenant.apartment_number }}</small>
+                                </div>
+                                <div class="text-end">
+                                    <strong>KSh {{ payment.amount }}</strong>
+                                    <br>
+                                    <small class="text-muted">{{ payment.date|date:"M d" }}</small>
+                                </div>
+                            </div>
+                            {% if not forloop.last %}<hr>{% endif %}
+                        {% endfor %}
+                        <div class="text-center mt-3">
+                            <a href="{% url 'payment_history' %}" class="btn btn-sm btn-outline-primary">View All</a>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-3">
+                            <i class="fas fa-credit-card fa-2x text-muted mb-2"></i>
+                            <p class="text-muted mb-0">No recent payments</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

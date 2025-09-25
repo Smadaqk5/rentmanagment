@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Send Custom SMS{% endblock %}
+
+{% block content %}
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-sms"></i> Send Custom SMS
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- Tenant Info -->
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <h6 class="card-title">{{ tenant.name }}</h6>
+                            <p class="card-text">
+                                <strong>Phone:</strong> {{ tenant.phone }}<br>
+                                <strong>Apartment:</strong> {{ tenant.apartment_number }}<br>
+                                <strong>Rent Amount:</strong> KSh {{ tenant.rent_amount }}<br>
+                                <strong>Amount Due:</strong> 
+                                <span class="{% if tenant.amount_due > 0 %}text-danger{% else %}text-success{% endif %}">
+                                    KSh {{ tenant.amount_due }}
+                                </span><br>
+                                <strong>Status:</strong> 
+                                {% if tenant.rent_status == 'Paid' %}
+                                    <span class="badge bg-success">Paid</span>
+                                {% elif tenant.rent_status == 'Partial' %}
+                                    <span class="badge bg-warning">Partial</span>
+                                {% elif tenant.rent_status == 'Overdue' %}
+                                    <span class="badge bg-danger">Overdue</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Unpaid</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- SMS Form -->
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="message" class="form-label">SMS Message</label>
+                            <textarea class="form-control" 
+                                      id="message" 
+                                      name="message" 
+                                      rows="6" 
+                                      placeholder="Enter your custom message here..."
+                                      maxlength="160"
+                                      required></textarea>
+                            <div class="form-text">
+                                <span id="charCount">0</span>/160 characters (SMS limit)
+                            </div>
+                        </div>
+
+                        <!-- Quick Message Templates -->
+                        <div class="mb-3">
+                            <label class="form-label">Quick Templates</label>
+                            <div class="btn-group-vertical w-100" role="group">
+                                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="setMessage('Hello {{ tenant.name }}, this is a reminder that your rent for apartment {{ tenant.apartment_number }} is due. Please make your payment as soon as possible. Thank you!')">
+                                    Rent Reminder
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="setMessage('Hello {{ tenant.name }}, we have received your rent payment for apartment {{ tenant.apartment_number }}. Thank you for your timely payment!')">
+                                    Payment Confirmation
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="setMessage('Hello {{ tenant.name }}, you have an outstanding balance of KSh {{ tenant.amount_due }} for apartment {{ tenant.apartment_number }}. Please make your payment as soon as possible. Thank you!')">
+                                    Outstanding Balance
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="setMessage('Hello {{ tenant.name }}, please contact us regarding your apartment {{ tenant.apartment_number }}. Thank you!')">
+                                    General Contact
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'tenant_list' %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-paper-plane"></i> Send SMS
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Character counter
+        document.getElementById('message').addEventListener('input', function() {
+            const charCount = this.value.length;
+            document.getElementById('charCount').textContent = charCount;
+            
+            if (charCount > 160) {
+                document.getElementById('charCount').classList.add('text-danger');
+            } else {
+                document.getElementById('charCount').classList.remove('text-danger');
+            }
+        });
+
+        // Set message from template
+        function setMessage(message) {
+            const textarea = document.getElementById('message');
+            textarea.value = message;
+            textarea.dispatchEvent(new Event('input')); // Trigger character count update
+        }
+
+        // Form validation
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const message = document.getElementById('message').value.trim();
+            if (!message) {
+                e.preventDefault();
+                alert('Please enter a message.');
+                return;
+            }
+            
+            if (message.length > 160) {
+                e.preventDefault();
+                alert('Message is too long. Please keep it under 160 characters.');
+                return;
+            }
+            
+            if (!confirm('Are you sure you want to send this SMS?')) {
+                e.preventDefault();
+            }
+        });
+    </script>
+{% endblock %}

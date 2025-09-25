@@ -1,0 +1,294 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Record Management{% endblock %}
+
+{% block page_actions %}
+    <div class="btn-group" role="group">
+        <a href="{% url 'dashboard' %}" class="btn btn-outline-primary">
+            <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </a>
+        <a href="{% url 'export_data' %}" class="btn btn-success">
+            <i class="fas fa-download"></i> Export Data
+        </a>
+    </div>
+{% endblock %}
+
+{% block content %}
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="card-title text-muted">Total Tenants</h6>
+                    <h3 class="mb-0">{{ total_tenants }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="card-title text-muted">Total Payments</h6>
+                    <h3 class="mb-0">{{ total_payments }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="card-title text-muted">Overdue Tenants</h6>
+                    <h3 class="mb-0 text-danger">{{ overdue_tenants|length }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="card-title text-muted">Data Export</h6>
+                    <a href="{% url 'export_data' %}" class="btn btn-success btn-sm">
+                        <i class="fas fa-download"></i> Export CSV
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Management Actions -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-tools"></i> Record Management Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="d-grid">
+                                <a href="{% url 'bulk_delete_tenants' %}" class="btn btn-danger">
+                                    <i class="fas fa-users-slash"></i> Bulk Delete Tenants
+                                </a>
+                                <small class="text-muted mt-1">Delete multiple tenants at once</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="d-grid">
+                                <a href="{% url 'bulk_delete_payments' %}" class="btn btn-warning">
+                                    <i class="fas fa-credit-card"></i> Bulk Delete Payments
+                                </a>
+                                <small class="text-muted mt-1">Delete multiple payments at once</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="d-grid">
+                                <a href="{% url 'clear_old_payments' %}" class="btn btn-info">
+                                    <i class="fas fa-calendar-times"></i> Clear Old Payments
+                                </a>
+                                <small class="text-muted mt-1">Delete payments older than X days</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="d-grid">
+                                <a href="{% url 'export_data' %}" class="btn btn-success">
+                                    <i class="fas fa-file-csv"></i> Export All Data
+                                </a>
+                                <small class="text-muted mt-1">Download complete data as CSV</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Recent Tenants -->
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-users"></i> Recent Tenants</h5>
+                    <a href="{% url 'tenant_list' %}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body">
+                    {% if recent_tenants %}
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Apartment</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for tenant in recent_tenants %}
+                                        <tr>
+                                            <td>
+                                                <strong>{{ tenant.name }}</strong>
+                                                <br>
+                                                <small class="text-muted">{{ tenant.phone }}</small>
+                                            </td>
+                                            <td>{{ tenant.apartment_number }}</td>
+                                            <td>
+                                                {% if tenant.rent_status == 'Paid' %}
+                                                    <span class="badge bg-success">Paid</span>
+                                                {% elif tenant.rent_status == 'Partial' %}
+                                                    <span class="badge bg-warning">Partial</span>
+                                                {% elif tenant.rent_status == 'Overdue' %}
+                                                    <span class="badge bg-danger">Overdue</span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary">Unpaid</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm">
+                                                    <a href="{% url 'edit_tenant' tenant.id %}" 
+                                                       class="btn btn-primary btn-sm" 
+                                                       title="Edit">
+                                                        <i class="fas fa-edit"></i>
+                                                    </a>
+                                                    <a href="{% url 'delete_tenant' tenant.id %}" 
+                                                       class="btn btn-danger btn-sm" 
+                                                       title="Delete"
+                                                       onclick="return confirm('Are you sure you want to delete this tenant?')">
+                                                        <i class="fas fa-trash"></i>
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-3">
+                            <i class="fas fa-users fa-2x text-muted mb-2"></i>
+                            <p class="text-muted mb-0">No tenants found</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Payments -->
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-credit-card"></i> Recent Payments</h5>
+                    <a href="{% url 'payment_history' %}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body">
+                    {% if recent_payments %}
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Tenant</th>
+                                        <th>Amount</th>
+                                        <th>Type</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for payment in recent_payments %}
+                                        <tr>
+                                            <td>
+                                                <strong>{{ payment.tenant.name }}</strong>
+                                                <br>
+                                                <small class="text-muted">{{ payment.date|date:"M d, Y" }}</small>
+                                            </td>
+                                            <td>KSh {{ payment.amount }}</td>
+                                            <td>
+                                                <span class="badge bg-{% if payment.payment_type == 'Full' %}success{% elif payment.payment_type == 'Partial' %}warning{% else %}info{% endif %}">
+                                                    {{ payment.payment_type }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <a href="{% url 'delete_payment' payment.id %}" 
+                                                   class="btn btn-danger btn-sm" 
+                                                   title="Delete Payment"
+                                                   onclick="return confirm('Are you sure you want to delete this payment?')">
+                                                    <i class="fas fa-trash"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-3">
+                            <i class="fas fa-credit-card fa-2x text-muted mb-2"></i>
+                            <p class="text-muted mb-0">No payments found</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Overdue Tenants Alert -->
+    {% if overdue_tenants %}
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0"><i class="fas fa-exclamation-triangle"></i> Overdue Tenants</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Apartment</th>
+                                    <th>Amount Due</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for tenant in overdue_tenants %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ tenant.name }}</strong>
+                                            <br>
+                                            <small class="text-muted">{{ tenant.phone }}</small>
+                                        </td>
+                                        <td>{{ tenant.apartment_number }}</td>
+                                        <td>
+                                            <strong class="text-danger">KSh {{ tenant.amount_due }}</strong>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-danger">Overdue</span>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <a href="{% url 'add_partial_payment' tenant.id %}" 
+                                                   class="btn btn-warning btn-sm" 
+                                                   title="Add Payment">
+                                                    <i class="fas fa-plus"></i>
+                                                </a>
+                                                <a href="{% url 'send_reminder' tenant.id %}" 
+                                                   class="btn btn-whatsapp btn-sm" 
+                                                   title="Send Reminder">
+                                                    <i class="fab fa-whatsapp"></i>
+                                                </a>
+                                                <a href="{% url 'delete_tenant' tenant.id %}" 
+                                                   class="btn btn-danger btn-sm" 
+                                                   title="Delete"
+                                                   onclick="return confirm('Are you sure you want to delete this tenant?')">
+                                                    <i class="fas fa-trash"></i>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+{% endblock %}

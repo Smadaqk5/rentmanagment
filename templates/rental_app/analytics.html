@@ -1,0 +1,222 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Analytics{% endblock %}
+
+{% block page_actions %}
+    <div class="btn-group" role="group">
+        <a href="{% url 'dashboard' %}" class="btn btn-outline-primary">
+            <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+{% endblock %}
+
+{% block content %}
+    <!-- Analytics Overview -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="card-title text-muted">Total Tenants</h6>
+                    <h3 class="mb-0">{{ tenant_analytics.total_tenants }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="card-title text-muted">Collection Rate</h6>
+                    <h3 class="mb-0 text-success">{{ tenant_analytics.collection_rate|floatformat:1 }}%</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="card-title text-muted">Monthly Income</h6>
+                    <h3 class="mb-0 text-primary">KSh {{ monthly_income.total_income|floatformat:0 }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="card-title text-muted">Outstanding Amount</h6>
+                    <h3 class="mb-0 text-warning">KSh {{ tenant_analytics.total_amount_due|floatformat:0 }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Status Breakdown -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Payment Status Breakdown</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 text-center">
+                            <div class="p-3">
+                                <h4 class="text-success">{{ tenant_analytics.paid_tenants }}</h4>
+                                <p class="text-muted mb-0">Paid</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <div class="p-3">
+                                <h4 class="text-warning">{{ tenant_analytics.partial_tenants }}</h4>
+                                <p class="text-muted mb-0">Partial</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <div class="p-3">
+                                <h4 class="text-secondary">{{ tenant_analytics.unpaid_tenants }}</h4>
+                                <p class="text-muted mb-0">Unpaid</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <div class="p-3">
+                                <h4 class="text-danger">{{ tenant_analytics.overdue_tenants }}</h4>
+                                <p class="text-muted mb-0">Overdue</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Yearly Income Chart -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Yearly Income ({{ yearly_income.year }})</h5>
+                    <div class="btn-group btn-group-sm">
+                        <a href="?year={{ yearly_income.year|add:-1 }}" class="btn btn-outline-secondary">Previous Year</a>
+                        <a href="?year={{ yearly_income.year|add:1 }}" class="btn btn-outline-secondary">Next Year</a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for month_data in yearly_income.monthly_data %}
+                            <div class="col-md-1 text-center mb-3">
+                                <div class="p-2 border rounded">
+                                    <h6 class="mb-1">{{ month_data.month_name|slice:":3" }}</h6>
+                                    <h5 class="mb-0 text-primary">KSh {{ month_data.total_income|floatformat:0 }}</h5>
+                                    <small class="text-muted">{{ month_data.payment_count }} payments</small>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    <div class="mt-3 text-center">
+                        <h4 class="text-success">Total Yearly Income: KSh {{ yearly_income.total_yearly|floatformat:0 }}</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Overdue Tenants -->
+    {% if overdue_tenants %}
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0 text-danger">Overdue Tenants</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Tenant</th>
+                                    <th>Apartment</th>
+                                    <th>Amount Due</th>
+                                    <th>Days Overdue</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for overdue in overdue_tenants %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ overdue.tenant.name }}</strong>
+                                            <br>
+                                            <small class="text-muted">{{ overdue.tenant.phone }}</small>
+                                        </td>
+                                        <td>{{ overdue.tenant.apartment_number }}</td>
+                                        <td>
+                                            <strong class="text-danger">KSh {{ overdue.amount_due }}</strong>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-danger">{{ overdue.days_overdue }} days</span>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <a href="{% url 'add_partial_payment' overdue.tenant.id %}" 
+                                                   class="btn btn-warning btn-sm">
+                                                    <i class="fas fa-plus"></i> Payment
+                                                </a>
+                                                <a href="{% url 'send_reminder' overdue.tenant.id %}" 
+                                                   class="btn btn-whatsapp btn-sm">
+                                                    <i class="fab fa-whatsapp"></i> Remind
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Payment Trends -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Payment Trends (Last {{ payment_trends.days }} Days)</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Income</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for date, amount in payment_trends.daily_income.items %}
+                                            <tr>
+                                                <td>{{ date }}</td>
+                                                <td class="text-success">KSh {{ amount|floatformat:0 }}</td>
+                                            </tr>
+                                        {% empty %}
+                                            <tr>
+                                                <td colspan="2" class="text-center text-muted">No payments in the last {{ payment_trends.days }} days</td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-center">
+                                <h4 class="text-primary">KSh {{ payment_trends.total_period_income|floatformat:0 }}</h4>
+                                <p class="text-muted">Total Income ({{ payment_trends.days }} days)</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Add Partial Payment{% endblock %}
+
+{% block content %}
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-plus"></i> Add Partial Payment
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- Tenant Info -->
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <h6 class="card-title">{{ tenant.name }}</h6>
+                            <p class="card-text">
+                                <strong>Apartment:</strong> {{ tenant.apartment_number }}<br>
+                                <strong>Rent Amount:</strong> KSh {{ tenant.rent_amount }}<br>
+                                <strong>Amount Due:</strong> 
+                                <span class="{% if tenant.amount_due > 0 %}text-danger{% else %}text-success{% endif %}">
+                                    KSh {{ tenant.amount_due }}
+                                </span><br>
+                                <strong>Due Date:</strong> {{ tenant.due_date }}th of each month
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Payment Form -->
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="amount" class="form-label">Payment Amount (KSh)</label>
+                            <input type="number" 
+                                   class="form-control" 
+                                   id="amount" 
+                                   name="amount" 
+                                   step="0.01" 
+                                   min="0.01" 
+                                   max="{{ tenant.amount_due }}"
+                                   placeholder="Enter amount to pay"
+                                   required>
+                            <div class="form-text">
+                                Maximum: KSh {{ tenant.amount_due }}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="notes" class="form-label">Notes (Optional)</label>
+                            <textarea class="form-control" 
+                                      id="notes" 
+                                      name="notes" 
+                                      rows="3" 
+                                      placeholder="Add any notes about this payment"></textarea>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'tenant_list' %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-plus"></i> Record Payment
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

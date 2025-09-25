@@ -1,0 +1,82 @@
+/* Custom styles for Rental Management System */
+
+.sidebar {
+    min-height: 100vh;
+    background-color: #343a40;
+}
+
+.sidebar .nav-link {
+    color: #adb5bd;
+    transition: all 0.3s ease;
+}
+
+.sidebar .nav-link:hover {
+    color: #fff;
+    background-color: #495057;
+}
+
+.sidebar .nav-link.active {
+    color: #fff;
+    background-color: #495057;
+}
+
+.main-content {
+    margin-left: 0;
+}
+
+@media (min-width: 768px) {
+    .main-content {
+        margin-left: 250px;
+    }
+}
+
+.card-stat {
+    border-left: 4px solid #007bff;
+    transition: transform 0.2s ease;
+}
+
+.card-stat:hover {
+    transform: translateY(-2px);
+}
+
+.card-stat.paid {
+    border-left-color: #28a745;
+}
+
+.card-stat.unpaid {
+    border-left-color: #dc3545;
+}
+
+.btn-whatsapp {
+    background-color: #25D366;
+    border-color: #25D366;
+    color: white;
+}
+
+.btn-whatsapp:hover {
+    background-color: #1ea952;
+    border-color: #1ea952;
+    color: white;
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(0, 123, 255, 0.1);
+}
+
+.badge {
+    font-size: 0.75em;
+}
+
+.alert {
+    border-radius: 0.5rem;
+}
+
+.card {
+    border-radius: 0.5rem;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.btn-group-sm .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}

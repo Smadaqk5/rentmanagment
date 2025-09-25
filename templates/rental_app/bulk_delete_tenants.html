@@ -1,0 +1,164 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Bulk Delete Tenants{% endblock %}
+
+{% block content %}
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-users-slash"></i> Bulk Delete Tenants
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>Warning:</strong> This action will permanently delete the selected tenants and all their payment records. This action cannot be undone.
+                    </div>
+
+                    <form method="post" id="bulkDeleteForm">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="selectAll">
+                                <label class="form-check-label" for="selectAll">
+                                    <strong>Select All Tenants</strong>
+                                </label>
+                            </div>
+                        </div>
+
+                        {% if tenants %}
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Select</th>
+                                            <th>Name</th>
+                                            <th>Phone</th>
+                                            <th>Apartment</th>
+                                            <th>Rent Amount</th>
+                                            <th>Amount Due</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for tenant in tenants %}
+                                            <tr>
+                                                <td>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input tenant-checkbox" 
+                                                               type="checkbox" 
+                                                               name="tenant_ids" 
+                                                               value="{{ tenant.id }}"
+                                                               id="tenant_{{ tenant.id }}">
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <strong>{{ tenant.name }}</strong>
+                                                </td>
+                                                <td>{{ tenant.phone }}</td>
+                                                <td>{{ tenant.apartment_number }}</td>
+                                                <td>KSh {{ tenant.rent_amount }}</td>
+                                                <td>
+                                                    <strong class="{% if tenant.amount_due > 0 %}text-danger{% else %}text-success{% endif %}">
+                                                        KSh {{ tenant.amount_due }}
+                                                    </strong>
+                                                </td>
+                                                <td>
+                                                    {% if tenant.rent_status == 'Paid' %}
+                                                        <span class="badge bg-success">Paid</span>
+                                                    {% elif tenant.rent_status == 'Partial' %}
+                                                        <span class="badge bg-warning">Partial</span>
+                                                    {% elif tenant.rent_status == 'Overdue' %}
+                                                        <span class="badge bg-danger">Overdue</span>
+                                                    {% else %}
+                                                        <span class="badge bg-secondary">Unpaid</span>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="d-flex justify-content-between">
+                                <a href="{% url 'record_management' %}" class="btn btn-secondary">
+                                    <i class="fas fa-arrow-left"></i> Cancel
+                                </a>
+                                <button type="submit" class="btn btn-danger" id="deleteButton" disabled>
+                                    <i class="fas fa-trash"></i> Delete Selected Tenants
+                                </button>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4">
+                                <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                                <h5 class="text-muted">No tenants found</h5>
+                                <p class="text-muted">There are no tenants to delete.</p>
+                                <a href="{% url 'record_management' %}" class="btn btn-primary">
+                                    <i class="fas fa-arrow-left"></i> Back to Record Management
+                                </a>
+                            </div>
+                        {% endif %}
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Select all functionality
+        document.getElementById('selectAll').addEventListener('change', function() {
+            const checkboxes = document.querySelectorAll('.tenant-checkbox');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = this.checked;
+            });
+            updateDeleteButton();
+        });
+
+        // Individual checkbox change
+        document.querySelectorAll('.tenant-checkbox').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                updateDeleteButton();
+                updateSelectAll();
+            });
+        });
+
+        function updateDeleteButton() {
+            const checkedBoxes = document.querySelectorAll('.tenant-checkbox:checked');
+            const deleteButton = document.getElementById('deleteButton');
+            deleteButton.disabled = checkedBoxes.length === 0;
+            deleteButton.textContent = `Delete ${checkedBoxes.length} Selected Tenant${checkedBoxes.length !== 1 ? 's' : ''}`;
+        }
+
+        function updateSelectAll() {
+            const checkboxes = document.querySelectorAll('.tenant-checkbox');
+            const selectAll = document.getElementById('selectAll');
+            const checkedCount = document.querySelectorAll('.tenant-checkbox:checked').length;
+            
+            if (checkedCount === 0) {
+                selectAll.indeterminate = false;
+                selectAll.checked = false;
+            } else if (checkedCount === checkboxes.length) {
+                selectAll.indeterminate = false;
+                selectAll.checked = true;
+            } else {
+                selectAll.indeterminate = true;
+            }
+        }
+
+        // Confirmation before delete
+        document.getElementById('bulkDeleteForm').addEventListener('submit', function(e) {
+            const checkedBoxes = document.querySelectorAll('.tenant-checkbox:checked');
+            if (checkedBoxes.length === 0) {
+                e.preventDefault();
+                alert('Please select at least one tenant to delete.');
+                return;
+            }
+            
+            if (!confirm(`Are you sure you want to delete ${checkedBoxes.length} tenant(s)? This action cannot be undone.`)) {
+                e.preventDefault();
+            }
+        });
+    </script>
+{% endblock %}

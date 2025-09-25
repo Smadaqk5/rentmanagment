@@ -1,0 +1,196 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Bulk SMS Reminder{% endblock %}
+
+{% block content %}
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-paper-plane"></i> Send Bulk SMS Reminders
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Info:</strong> Select tenants to send SMS reminders to. You can choose between rent reminders or payment reminders.
+                    </div>
+
+                    <form method="post" id="bulkSmsForm">
+                        {% csrf_token %}
+                        
+                        <!-- Message Type Selection -->
+                        <div class="mb-4">
+                            <label class="form-label">Message Type</label>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="message_type" id="rent_reminder" value="rent_reminder" checked>
+                                        <label class="form-check-label" for="rent_reminder">
+                                            <strong>Rent Reminder</strong>
+                                            <br>
+                                            <small class="text-muted">General rent due reminder</small>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="message_type" id="payment_reminder" value="payment_reminder">
+                                        <label class="form-check-label" for="payment_reminder">
+                                            <strong>Payment Reminder</strong>
+                                            <br>
+                                            <small class="text-muted">Specific amount due reminder</small>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tenant Selection -->
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="selectAll">
+                                <label class="form-check-label" for="selectAll">
+                                    <strong>Select All Tenants</strong>
+                                </label>
+                            </div>
+                        </div>
+
+                        {% if tenants %}
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Select</th>
+                                            <th>Name</th>
+                                            <th>Phone</th>
+                                            <th>Apartment</th>
+                                            <th>Rent Amount</th>
+                                            <th>Amount Due</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for tenant in tenants %}
+                                            <tr>
+                                                <td>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input tenant-checkbox" 
+                                                               type="checkbox" 
+                                                               name="tenant_ids" 
+                                                               value="{{ tenant.id }}"
+                                                               id="tenant_{{ tenant.id }}">
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <strong>{{ tenant.name }}</strong>
+                                                </td>
+                                                <td>{{ tenant.phone }}</td>
+                                                <td>{{ tenant.apartment_number }}</td>
+                                                <td>KSh {{ tenant.rent_amount }}</td>
+                                                <td>
+                                                    <strong class="{% if tenant.amount_due > 0 %}text-danger{% else %}text-success{% endif %}">
+                                                        KSh {{ tenant.amount_due }}
+                                                    </strong>
+                                                </td>
+                                                <td>
+                                                    {% if tenant.rent_status == 'Paid' %}
+                                                        <span class="badge bg-success">Paid</span>
+                                                    {% elif tenant.rent_status == 'Partial' %}
+                                                        <span class="badge bg-warning">Partial</span>
+                                                    {% elif tenant.rent_status == 'Overdue' %}
+                                                        <span class="badge bg-danger">Overdue</span>
+                                                    {% else %}
+                                                        <span class="badge bg-secondary">Unpaid</span>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="d-flex justify-content-between">
+                                <a href="{% url 'record_management' %}" class="btn btn-secondary">
+                                    <i class="fas fa-arrow-left"></i> Cancel
+                                </a>
+                                <button type="submit" class="btn btn-success" id="sendButton" disabled>
+                                    <i class="fas fa-paper-plane"></i> Send SMS to Selected Tenants
+                                </button>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4">
+                                <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                                <h5 class="text-muted">No tenants found</h5>
+                                <p class="text-muted">There are no tenants with unpaid, partial, or overdue status to send reminders to.</p>
+                                <a href="{% url 'record_management' %}" class="btn btn-primary">
+                                    <i class="fas fa-arrow-left"></i> Back to Record Management
+                                </a>
+                            </div>
+                        {% endif %}
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Select all functionality
+        document.getElementById('selectAll').addEventListener('change', function() {
+            const checkboxes = document.querySelectorAll('.tenant-checkbox');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = this.checked;
+            });
+            updateSendButton();
+        });
+
+        // Individual checkbox change
+        document.querySelectorAll('.tenant-checkbox').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                updateSendButton();
+                updateSelectAll();
+            });
+        });
+
+        function updateSendButton() {
+            const checkedBoxes = document.querySelectorAll('.tenant-checkbox:checked');
+            const sendButton = document.getElementById('sendButton');
+            sendButton.disabled = checkedBoxes.length === 0;
+            sendButton.textContent = `Send SMS to ${checkedBoxes.length} Selected Tenant${checkedBoxes.length !== 1 ? 's' : ''}`;
+        }
+
+        function updateSelectAll() {
+            const checkboxes = document.querySelectorAll('.tenant-checkbox');
+            const selectAll = document.getElementById('selectAll');
+            const checkedCount = document.querySelectorAll('.tenant-checkbox:checked').length;
+            
+            if (checkedCount === 0) {
+                selectAll.indeterminate = false;
+                selectAll.checked = false;
+            } else if (checkedCount === checkboxes.length) {
+                selectAll.indeterminate = false;
+                selectAll.checked = true;
+            } else {
+                selectAll.indeterminate = true;
+            }
+        }
+
+        // Confirmation before send
+        document.getElementById('bulkSmsForm').addEventListener('submit', function(e) {
+            const checkedBoxes = document.querySelectorAll('.tenant-checkbox:checked');
+            if (checkedBoxes.length === 0) {
+                e.preventDefault();
+                alert('Please select at least one tenant to send SMS to.');
+                return;
+            }
+            
+            const messageType = document.querySelector('input[name="message_type"]:checked').value;
+            const messageTypeText = messageType === 'rent_reminder' ? 'rent reminders' : 'payment reminders';
+            
+            if (!confirm(`Are you sure you want to send ${messageTypeText} to ${checkedBoxes.length} tenant(s)?`)) {
+                e.preventDefault();
+            }
+        });
+    </script>
+{% endblock %}
