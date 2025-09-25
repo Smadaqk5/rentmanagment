@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Test real SMS sending with Africa's Talking
+Test SMS with real phone number
 """
 
 import os
@@ -20,8 +20,8 @@ from rental_app.africas_talking_service import AfricasTalkingService
 
 
 def test_real_sms():
-    """Test sending a real SMS"""
-    print("📱 Testing Real SMS with Africa's Talking")
+    """Test SMS with real phone number"""
+    print("📱 Testing SMS with Real Phone Number")
     print("=" * 50)
     
     # Get phone number from user
@@ -30,7 +30,7 @@ def test_real_sms():
         print("❌ Phone number is required!")
         return False
     
-    # Initialize service
+    # Initialize SMS service
     sms_service = AfricasTalkingService()
     
     # Test message
@@ -46,14 +46,15 @@ def test_real_sms():
     if success:
         print(f"\n✅ {message}")
         print("🎉 SMS sent successfully! Check your phone!")
+        return True
     else:
         print(f"\n❌ {message}")
         print("💡 This might be because:")
         print("   - The phone number format is incorrect")
         print("   - Your Africa's Talking account needs verification")
         print("   - You're using sandbox mode (use 'sandbox' as username for testing)")
-    
-    return success
+        print("   - Your account doesn't have credits")
+        return False
 
 
 def main():

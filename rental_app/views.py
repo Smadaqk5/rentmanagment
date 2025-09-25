@@ -7,7 +7,7 @@ from django.utils import timezone
 from datetime import timedelta
 from .models import Tenant, Payment
 from .forms import TenantForm, PaymentForm
-from .africas_talking_service import AfricasTalkingService
+from .sms_service import SMSMobileService
 from .analytics import AnalyticsService
 
 
@@ -397,7 +397,7 @@ def sms_logs(request):
         sms_logs = SMSLog.objects.select_related('tenant').order_by('-sent_at')
     
     # Get SMS statistics
-    sms_service = AfricasTalkingService()
+    sms_service = SMSMobileService()
     stats = sms_service.get_sms_statistics()
     
     context = {
